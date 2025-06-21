@@ -11,4 +11,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd agi-cli-platform && python main.py --help"
+args = "cd agi-cli-platform && python3 main.py --help"
