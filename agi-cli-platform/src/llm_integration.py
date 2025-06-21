@@ -23,6 +23,7 @@ class LLMIntegration:
         self.config_manager = config_manager
         self.llm_config = config_manager.get('llm', {})
         self.api_providers = {
+            'gemini': self._query_gemini,
             'openai': self._query_openai,
             'anthropic': self._query_anthropic,
             'local': self._query_local
@@ -34,7 +35,7 @@ class LLMIntegration:
         try:
             # Try direct API first if enabled
             if self.use_direct_api:
-                for provider_name in self.llm_config.get('providers', ['openai']):
+                for provider_name in self.llm_config.get('providers', ['gemini']):
                     if provider_name in self.api_providers:
                         try:
                             response = self.api_providers[provider_name](prompt, system_prompt)
@@ -42,16 +43,67 @@ class LLMIntegration:
                                 logger.debug(f"Direct API response from {provider_name}: {len(response)} chars")
                                 return response
                         except Exception as e:
-                            logger.warning(f"Direct API failed for {provider_name}: {e}")
-                            continue
+                            logger.error(f"Direct API failed for {provider_name}: {e}")
+                            # Don't continue to other providers, fail fast for Gemini-only setup
+                            return None
             
-            # Fallback to external llm command
-            return self._query_external_command(prompt, system_prompt)
+            # Don't fallback to external llm command for Gemini-only setup
+            logger.error("No LLM providers available or all failed")
+            return None
             
         except Exception as e:
             logger.error(f"All LLM query methods failed: {e}")
             return None
     
+    def _query_gemini(self, prompt: str, system_prompt: Optional[str] = None) -> Optional[str]:
+        """Query Google Gemini API directly"""
+        api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY not found")
+        
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        
+        # Build the content parts
+        parts = []
+        if system_prompt:
+            parts.append({"text": f"System: {system_prompt}\n\nUser: {prompt}"})
+        else:
+            parts.append({"text": prompt})
+        
+        data = {
+            "contents": [
+                {
+                    "parts": parts
+                }
+            ],
+            "generationConfig": {
+                "temperature": self.llm_config.get('temperature', 0.7),
+                "maxOutputTokens": self.llm_config.get('max_tokens', 2000)
+            }
+        }
+        
+        model = self.llm_config.get('gemini_model', 'gemini-2.0-flash')
+        url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}'
+        
+        response = requests.post(
+            url,
+            headers=headers,
+            json=data,
+            timeout=self.llm_config.get('timeout', 30)
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if 'candidates' in result and len(result['candidates']) > 0:
+                content = result['candidates'][0]['content']
+                if 'parts' in content and len(content['parts']) > 0:
+                    return content['parts'][0]['text'].strip()
+            raise Exception("No valid response from Gemini API")
+        else:
+            raise Exception(f"Gemini API error: {response.status_code} - {response.text}")
+
     def _query_openai(self, prompt: str, system_prompt: Optional[str] = None) -> Optional[str]:
         """Query OpenAI API directly"""
         api_key = os.getenv('OPENAI_API_KEY')
@@ -214,14 +266,40 @@ The code should be compatible with the Click framework and follow these guidelin
 5. Use Click decorators for CLI commands when appropriate
 6. Follow PEP 8 style guidelines
 
-Return ONLY the Python code without any explanations or markdown formatting."""
+CRITICAL: Return ONLY the raw Python code without any markdown formatting, code blocks, or explanations. 
+Do not include ```python or ``` markers. Start directly with the Python code."""
 
         user_prompt = f"""Generate Python code for a CLI command with this functionality:
 {description}
 
 The code should be a complete function or class that can be dynamically loaded into a Click-based CLI application."""
 
-        return self.query(user_prompt, system_prompt)
+        response = self.query(user_prompt, system_prompt)
+        
+        if response:
+            # Clean up any markdown formatting that might be included
+            response = self._clean_code_response(response)
+        
+        return response
+    
+    def _clean_code_response(self, response: str) -> str:
+        """Clean up code response by removing markdown formatting"""
+        # Remove any leading/trailing whitespace first
+        response = response.strip()
+        
+        # Remove markdown code blocks
+        if response.startswith('```python'):
+            response = response[9:]  # Remove ```python
+        elif response.startswith('```'):
+            response = response[3:]   # Remove ```
+        
+        if response.endswith('```'):
+            response = response[:-3]  # Remove trailing ```
+        
+        # Remove any leading/trailing whitespace again
+        response = response.strip()
+        
+        return response
     
     def validate_code_with_llm(self, code: str) -> bool:
         """Use LLM to validate generated code for safety and correctness"""
@@ -246,10 +324,15 @@ Respond with only 'SAFE' if the code is acceptable, or 'UNSAFE' if it poses any 
 
         response = self.query(user_prompt, system_prompt)
         
-        if response and 'SAFE' in response.upper():
-            return True
+        if response:
+            response_upper = response.upper().strip()
+            if response_upper == 'SAFE' or response_upper.startswith('SAFE '):
+                return True
+            else:
+                logger.warning(f"LLM validation failed: {response}")
+                return False
         else:
-            logger.warning(f"LLM validation failed: {response}")
+            logger.warning("LLM validation failed: No response")
             return False
     
     def improve_code(self, code: str, error_message: str) -> Optional[str]:

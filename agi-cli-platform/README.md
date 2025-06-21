@@ -9,13 +9,14 @@ This AGI CLI Platform uses LLM integration to generate and integrate new functio
 ## Features
 
 - **Core CLI Framework**: Built with Click for robust command-line interface
-- **LLM Integration**: Uses the `llm` command for code generation and queries
+- **Gemini AI Integration**: Uses Google's Gemini 2.0 Flash model for code generation
 - **Self-Modification**: Can generate and integrate new commands dynamically
 - **Code Validation**: Multiple layers of security and correctness validation
 - **Plugin System**: Extensible architecture for additional functionality
 - **Command History**: Complete history and rollback capabilities
 - **Safe Execution**: Sandboxed execution environment with validation
 - **Configuration Management**: YAML-based configuration with user customization
+- **Comprehensive Testing**: Full test suite with mocking and live API testing
 
 ## Installation
 
@@ -48,11 +49,11 @@ This AGI CLI Platform uses LLM integration to generate and integrate new functio
    pip install -e .
    ```
 
-4. **Set up your API keys** (optional, for LLM integration)
+4. **Set up your Gemini API key** (required for AI features)
    ```bash
-   export OPENAI_API_KEY="your-api-key"
-   # or
-   export LLM_API_KEY="your-api-key"
+   export GEMINI_API_KEY="your-gemini-api-key"
+   # or alternatively
+   export GOOGLE_API_KEY="your-google-api-key"
    ```
 
 5. **Run the tool**
@@ -105,6 +106,27 @@ python main.py list-plugins
 
 # Install a plugin
 python main.py install-plugin <plugin-name>
+```
+
+### Testing
+
+The project includes a comprehensive test suite:
+
+```bash
+# Run all tests (mocked, no live API calls)
+python run_tests.py
+
+# Run fast tests only
+python run_tests.py --fast
+
+# Run tests with coverage report
+python run_tests.py --coverage
+
+# Run live API tests (requires valid GEMINI_API_KEY)
+python run_tests.py --live
+
+# Run specific test file
+python run_tests.py -f tests/test_llm_integration.py
 ```
 
 ### Configuration
@@ -170,7 +192,8 @@ agi-cli-platform/
 
 1. **ModuleNotFoundError**: Make sure you've activated your virtual environment and installed dependencies
 2. **Permission errors**: Ensure proper file permissions for generated code
-3. **LLM integration issues**: Check your API keys and network connectivity
+3. **Gemini API issues**: Check your `GEMINI_API_KEY` or `GOOGLE_API_KEY` and network connectivity
+4. **Test failures**: Run tests without live API calls using `python run_tests.py` (default mode)
 
 ### Virtual Environment Issues
 
