@@ -1,0 +1,17 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Self-Evolving CLI Tool - A foundation for AGI platform development"
+requires-python = ">=3.11"
+dependencies = [
+    "stringzilla>=3.12.5",
+    "pyyaml>=6.0",
+    "click>=8.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+evolve-cli = "main:main"

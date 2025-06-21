@@ -1,0 +1,30 @@
+# Self-Evolving CLI Tool Configuration Example
+# Copy this to ~/.cli_evolve_config and modify as needed
+
+version = 1.0.0
+verbose = false
+
+# LLM Integration Settings
+llm.command = llm
+llm.model = gpt-3.5-turbo
+llm.temperature = 0.7
+llm.max_tokens = 2000
+llm.timeout = 30
+
+# Execution Settings
+execution.safe_mode = true
+execution.max_time = 60
+
+# Validation Settings
+validation.enabled = true
+
+# History Settings
+history.max_entries = 1000
+
+# Directory Paths
+paths.generated_dir = generated
+paths.history_dir = history
+
+# Example API Key Configuration (set in environment)
+# export OPENAI_API_KEY="your-api-key-here"
+# export LLM_API_KEY="your-api-key-here"

@@ -1,0 +1,55 @@
+"""
+Generated command: {{ command_name }}
+Description: {{ description }}
+Generated at: {{ timestamp }}
+"""
+
+import click
+{% if imports %}
+{% for import_stmt in imports %}
+{{ import_stmt }}
+{% endfor %}
+{% endif %}
+
+@click.command(name="{{ command_name }}")
+{% if options %}
+{% for option in options %}
+@click.option('{{ option.flag }}', '{{ option.short }}', {{ option.params }})
+{% endfor %}
+{% endif %}
+{% if arguments %}
+{% for arg in arguments %}
+@click.argument('{{ arg.name }}'{% if arg.params %}, {{ arg.params }}{% endif %})
+{% endfor %}
+{% endif %}
+def {{ command_function_name }}({% if parameters %}{{ parameters }}{% endif %}):
+    """
+    {{ description }}
+    {% if help_text %}
+    
+    {{ help_text }}
+    {% endif %}
+    """
+    try:
+        {% if verbose_option %}
+        if verbose:
+            click.echo(f"Executing {{ command_name }}...")
+        {% endif %}
+        
+        # Command implementation
+        {{ implementation | indent(8) }}
+        
+        {% if success_message %}
+        click.echo("{{ success_message }}")
+        {% endif %}
+        
+    except Exception as e:
+        click.echo(f"Error in {{ command_name }}: {e}", err=True)
+        {% if verbose_option %}
+        if verbose:
+            import traceback
+            click.echo(traceback.format_exc(), err=True)
+        {% endif %}
+
+# Make the command available for dynamic loading
+__all__ = ["{{ command_function_name }}"]

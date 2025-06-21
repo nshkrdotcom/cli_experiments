@@ -1,0 +1,12 @@
+build/
+generated/
+history/
+*.o
+*.so
+*.a
+cli_demo
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

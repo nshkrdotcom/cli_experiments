@@ -1,0 +1,40 @@
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["cmake", "gcc", "gnumake"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Python CLI Tool"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Python CLI Demo"
+
+[[workflows.workflow]]
+name = "Python CLI Tool"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py --help"
+
+[[workflows.workflow]]
+name = "Python CLI Demo"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py status"
+
+[deployment]
+run = ["sh", "-c", "pip install click pyyaml && python main.py --help"]

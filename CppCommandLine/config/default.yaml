@@ -1,0 +1,101 @@
+# Default configuration for Self-Evolving CLI Tool
+version: "0.1.0"
+verbose: false
+
+# LLM Integration Settings
+llm:
+  provider: "default"
+  model: "gpt-3.5-turbo"
+  temperature: 0.7
+  max_tokens: 2000
+  timeout: 30
+
+# Code Generation Settings
+code_generation:
+  validation_enabled: true
+  safe_execution: true
+  backup_enabled: true
+  max_code_length: 10000
+  auto_improve: true
+  improvement_attempts: 3
+
+# History Management
+history:
+  max_entries: 1000
+  auto_cleanup: true
+  backup_path: "backups"
+  retention_days: 30
+
+# Plugin System
+plugins:
+  auto_load: true
+  auto_activate: true
+  plugin_dirs:
+    - "plugins"
+  allowed_imports:
+    - "os"
+    - "sys"
+    - "pathlib"
+    - "json"
+    - "yaml"
+    - "click"
+    - "datetime"
+    - "time"
+    - "subprocess"
+    - "shutil"
+    - "glob"
+    - "re"
+    - "uuid"
+    - "typing"
+    - "collections"
+    - "itertools"
+    - "functools"
+    - "argparse"
+    - "logging"
+
+# Security Settings
+security:
+  restricted_modules:
+    - "eval"
+    - "exec"
+    - "compile"
+    - "__import__"
+    - "importlib"
+  max_execution_time: 60
+  sandbox_enabled: true
+  allow_file_operations: false
+  allow_network_operations: false
+  allow_subprocess: false
+
+# Directory Paths
+paths:
+  generated_dir: "generated"
+  plugins_dir: "plugins"
+  templates_dir: "templates"
+  logs_dir: "logs"
+  backups_dir: "backups"
+
+# Logging Settings
+logging:
+  level: "INFO"
+  file_logging: true
+  console_logging: true
+  max_log_files: 10
+  max_log_size_mb: 10
+
+# CLI Settings
+cli:
+  auto_complete: true
+  command_aliases: true
+  rich_output: true
+  progress_bars: true
+
+# AGI Platform Integration (Future)
+agi:
+  enabled: false
+  endpoint: ""
+  api_key: ""
+  model_name: ""
+  reasoning_enabled: false
+  self_reflection: false
+  goal_oriented: false

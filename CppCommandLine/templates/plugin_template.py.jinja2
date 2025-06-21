@@ -1,0 +1,89 @@
+"""
+Plugin: {{ plugin_name }}
+Description: {{ description }}
+Generated at: {{ timestamp }}
+"""
+
+import click
+from typing import List, Any
+{% if imports %}
+{% for import_stmt in imports %}
+{{ import_stmt }}
+{% endfor %}
+{% endif %}
+
+class {{ plugin_class_name }}:
+    """
+    {{ description }}
+    """
+    
+    def __init__(self):
+        self.name = "{{ plugin_name }}"
+        self.version = "{{ version | default('1.0.0') }}"
+        self.description = "{{ description }}"
+        self.enabled = False
+        {% if attributes %}
+        {% for attr_name, attr_value in attributes.items() %}
+        self.{{ attr_name }} = {{ attr_value }}
+        {% endfor %}
+        {% endif %}
+    
+    def activate(self):
+        """Activate the plugin"""
+        self.enabled = True
+        {% if activation_code %}
+        {{ activation_code | indent(8) }}
+        {% endif %}
+        click.echo(f"Plugin {self.name} activated")
+    
+    def deactivate(self):
+        """Deactivate the plugin"""
+        self.enabled = False
+        {% if deactivation_code %}
+        {{ deactivation_code | indent(8) }}
+        {% endif %}
+        click.echo(f"Plugin {self.name} deactivated")
+    
+    def get_commands(self) -> List[Any]:
+        """Return list of Click commands provided by this plugin"""
+        return [{% if commands %}{% for cmd in commands %}self.{{ cmd }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}]
+    
+    {% if methods %}
+    {% for method in methods %}
+    {{ method | indent(4) }}
+    
+    {% endfor %}
+    {% endif %}
+    
+    {% if commands %}
+    {% for command in commands %}
+    @click.command(name="{{ command.name }}")
+    {% if command.options %}
+    {% for option in command.options %}
+    @click.option('{{ option.flag }}', '{{ option.short }}', {{ option.params }})
+    {% endfor %}
+    {% endif %}
+    {% if command.arguments %}
+    {% for arg in command.arguments %}
+    @click.argument('{{ arg.name }}'{% if arg.params %}, {{ arg.params }}{% endif %})
+    {% endfor %}
+    {% endif %}
+    def {{ command.function_name }}(self{% if command.parameters %}, {{ command.parameters }}{% endif %}):
+        """
+        {{ command.description }}
+        """
+        try:
+            if not self.enabled:
+                click.echo(f"Plugin {self.name} is not enabled", err=True)
+                return
+            
+            {{ command.implementation | indent(12) }}
+            
+        except Exception as e:
+            click.echo(f"Error in {{ command.name }}: {e}", err=True)
+    
+    {% endfor %}
+    {% endif %}
+
+# Plugin entry point
+plugin_class = {{ plugin_class_name }}
