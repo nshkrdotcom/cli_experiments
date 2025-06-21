@@ -1,2 +1,14 @@
 [nix]
 channel = "stable-24_05"
+
+[workflows]
+runButton = "Run AGI CLI"
+
+[[workflows.workflow]]
+name = "Run AGI CLI"
+author = 38695504
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd agi-cli-platform && python main.py --help"

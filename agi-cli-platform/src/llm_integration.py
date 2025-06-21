@@ -12,15 +12,141 @@ from logger import setup_logger
 
 logger = setup_logger(__name__)
 
+import json
+import requests
+from typing import Optional, Dict, Any
+
 class LLMIntegration:
-    """Handles integration with LLM providers via the 'llm' command"""
+    """Handles integration with LLM providers via direct API and fallback to 'llm' command"""
     
     def __init__(self, config_manager):
         self.config_manager = config_manager
         self.llm_config = config_manager.get('llm', {})
+        self.api_providers = {
+            'openai': self._query_openai,
+            'anthropic': self._query_anthropic,
+            'local': self._query_local
+        }
+        self.use_direct_api = self.llm_config.get('use_direct_api', True)
     
     def query(self, prompt: str, system_prompt: Optional[str] = None) -> Optional[str]:
         """Send a query to the LLM and return the response"""
+        try:
+            # Try direct API first if enabled
+            if self.use_direct_api:
+                for provider_name in self.llm_config.get('providers', ['openai']):
+                    if provider_name in self.api_providers:
+                        try:
+                            response = self.api_providers[provider_name](prompt, system_prompt)
+                            if response:
+                                logger.debug(f"Direct API response from {provider_name}: {len(response)} chars")
+                                return response
+                        except Exception as e:
+                            logger.warning(f"Direct API failed for {provider_name}: {e}")
+                            continue
+            
+            # Fallback to external llm command
+            return self._query_external_command(prompt, system_prompt)
+            
+        except Exception as e:
+            logger.error(f"All LLM query methods failed: {e}")
+            return None
+    
+    def _query_openai(self, prompt: str, system_prompt: Optional[str] = None) -> Optional[str]:
+        """Query OpenAI API directly"""
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found")
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        
+        data = {
+            "model": self.llm_config.get('openai_model', 'gpt-3.5-turbo'),
+            "messages": messages,
+            "temperature": self.llm_config.get('temperature', 0.7),
+            "max_tokens": self.llm_config.get('max_tokens', 2000)
+        }
+        
+        response = requests.post(
+            'https://api.openai.com/v1/chat/completions',
+            headers=headers,
+            json=data,
+            timeout=self.llm_config.get('timeout', 30)
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['choices'][0]['message']['content'].strip()
+        else:
+            raise Exception(f"OpenAI API error: {response.status_code} - {response.text}")
+    
+    def _query_anthropic(self, prompt: str, system_prompt: Optional[str] = None) -> Optional[str]:
+        """Query Anthropic API directly"""
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found")
+        
+        headers = {
+            'x-api-key': api_key,
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01'
+        }
+        
+        content = prompt
+        if system_prompt:
+            content = f"{system_prompt}\n\n{prompt}"
+        
+        data = {
+            "model": self.llm_config.get('anthropic_model', 'claude-3-sonnet-20240229'),
+            "messages": [{"role": "user", "content": content}],
+            "max_tokens": self.llm_config.get('max_tokens', 2000)
+        }
+        
+        response = requests.post(
+            'https://api.anthropic.com/v1/messages',
+            headers=headers,
+            json=data,
+            timeout=self.llm_config.get('timeout', 30)
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['content'][0]['text'].strip()
+        else:
+            raise Exception(f"Anthropic API error: {response.status_code} - {response.text}")
+    
+    def _query_local(self, prompt: str, system_prompt: Optional[str] = None) -> Optional[str]:
+        """Query local LLM endpoint"""
+        endpoint = self.llm_config.get('local_endpoint', 'http://0.0.0.0:11434/api/generate')
+        
+        data = {
+            "model": self.llm_config.get('local_model', 'llama2'),
+            "prompt": f"{system_prompt}\n\n{prompt}" if system_prompt else prompt,
+            "stream": False
+        }
+        
+        response = requests.post(
+            endpoint,
+            json=data,
+            timeout=self.llm_config.get('timeout', 30)
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result.get('response', '').strip()
+        else:
+            raise Exception(f"Local LLM error: {response.status_code} - {response.text}")
+    
+    def _query_external_command(self, prompt: str, system_prompt: Optional[str] = None) -> Optional[str]:
+        """Fallback to external llm command"""
         try:
             # Build the llm command
             cmd = ['llm']

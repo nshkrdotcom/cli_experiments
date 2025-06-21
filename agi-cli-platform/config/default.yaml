@@ -4,11 +4,21 @@ verbose: false
 
 # LLM Integration Settings
 llm:
-  provider: "default"
-  model: "gpt-3.5-turbo"
+  use_direct_api: true
+  providers: ["openai", "anthropic", "local"]  # Priority order
+  timeout: 30
   temperature: 0.7
   max_tokens: 2000
-  timeout: 30
+
+  # OpenAI configuration
+  openai_model: "gpt-3.5-turbo"
+
+  # Anthropic configuration  
+  anthropic_model: "claude-3-sonnet-20240229"
+
+  # Local LLM configuration
+  local_endpoint: "http://0.0.0.0:11434/api/generate"
+  local_model: "llama2"
 
 # Code Generation Settings
 code_generation:
@@ -55,17 +65,30 @@ plugins:
 
 # Security Settings
 security:
-  restricted_modules:
-    - "eval"
-    - "exec"
-    - "compile"
-    - "__import__"
-    - "importlib"
-  max_execution_time: 60
+  validation_enabled: true
+  strict_mode: true
+
+  # Sandbox configuration
   sandbox_enabled: true
-  allow_file_operations: false
-  allow_network_operations: false
-  allow_subprocess: false
+  memory_limit_mb: 50
+  cpu_time_limit: 10
+  network_access: false
+
+  # Validation timeouts
+  max_execution_time: 60
+  llm_validation_timeout: 30
+
+  # Restricted operations
+  restricted_modules: ["os", "sys", "subprocess", "socket", "urllib", "requests"]
+  dangerous_functions: ["eval", "exec", "compile", "__import__", "open"]
+
+  # Pattern detection
+  suspicious_patterns:
+    - "rm -rf"
+    - "format c:"
+    - "del /q" 
+    - "chmod 777"
+    - "sudo"
 
 # Directory Paths
 paths:
