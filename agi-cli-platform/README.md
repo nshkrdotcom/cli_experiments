@@ -1,10 +1,10 @@
-# Self-Evolving CLI Tool
+# AGI CLI Platform
 
-A foundation for AGI platform development with self-modification capabilities.
+A self-evolving command-line platform that serves as a foundation for AGI (Artificial General Intelligence) development with advanced self-modification capabilities.
 
 ## Overview
 
-This CLI tool can use LLM queries to generate and integrate new functionality dynamically. It serves as a foundation for building more advanced AGI platforms by demonstrating self-modification, code generation, and safe execution capabilities.
+This AGI CLI Platform uses LLM integration to generate and integrate new functionality dynamically. It demonstrates core AGI concepts including self-modification, autonomous code generation, multi-layer safety validation, and adaptive learning - serving as a practical foundation for building more advanced AGI systems.
 
 ## Features
 
@@ -24,7 +24,7 @@ This CLI tool can use LLM queries to generate and integrate new functionality dy
 1. **Clone this repository**
    ```bash
    git clone <repository-url>
-   cd CppCommandLine
+   cd agi-cli-platform
    ```
 
 2. **One-command setup** (Linux/macOS)
@@ -136,7 +136,7 @@ The C++ version demonstrates:
 ### Project Structure
 
 ```
-CppCommandLine/
+agi-cli-platform/
 ├── src/                    # Python source code
 │   ├── cli.py             # Main CLI interface
 │   ├── config.py          # Configuration management

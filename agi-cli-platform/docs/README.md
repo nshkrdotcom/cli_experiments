@@ -122,7 +122,7 @@ This directory contains comprehensive technical documentation for the Self-Evolv
 ```bash
 # Clone repository
 git clone <repository-url>
-cd CppCommandLine
+cd agi-cli-platform
 
 # Setup Python environment
 source activate_env.sh

@@ -1,8 +1,8 @@
-# Technical Documentation Index
+# AGI CLI Platform - Technical Documentation Index
 
 ## Overview
 
-This document serves as the comprehensive index for the Self-Evolving CLI Platform technical documentation. The platform represents a foundational AGI system that demonstrates self-modification capabilities through LLM-driven code generation, multi-language implementation, and comprehensive safety frameworks.
+This document serves as the comprehensive index for the AGI CLI Platform technical documentation. The platform represents a foundational AGI (Artificial General Intelligence) system that demonstrates autonomous self-modification capabilities through LLM-driven code generation, multi-language implementation, and comprehensive safety frameworks.
 
 ## 📚 Documentation Structure
 
