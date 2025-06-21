@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     CommandExecutor executor(config);
     
     // Create the main CLI app
-    CLI::App app{"Self-Evolving CLI Tool - A foundation for AGI platform development"};
+    CLI::App app{"AGI CLI Platform - Self-evolving intelligence framework for AGI development"};
     
     // Global options
     bool verbose = false;
@@ -18,13 +18,6 @@ int main(int argc, char** argv) {
     
     app.add_flag("-v,--verbose", verbose, "Enable verbose output");
     app.add_option("-c,--config", config_file, "Configuration file path");
-    
-    // Parse global options first to set up configuration
-    try {
-        app.parse(argc, argv);
-    } catch (const CLI::ParseError &e) {
-        // Continue with default parsing for subcommands
-    }
     
     // Set verbose mode
     if (verbose) {
@@ -36,12 +29,6 @@ int main(int argc, char** argv) {
     if (!config_file.empty()) {
         config->load_config(config_file);
     }
-    
-    // Clear app and recreate with all commands
-    app.clear();
-    app.description("Self-Evolving CLI Tool - A foundation for AGI platform development");
-    app.add_flag("-v,--verbose", verbose, "Enable verbose output");
-    app.add_option("-c,--config", config_file, "Configuration file path");
     
     // Evolve command - core functionality
     auto evolve_cmd = app.add_subcommand("evolve", "Generate and integrate new functionality using LLM");

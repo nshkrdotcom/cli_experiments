@@ -83,7 +83,7 @@ bool CommandExecutor::query_llm(const std::string& query) {
 }
 
 void CommandExecutor::show_status() {
-    std::cout << "Self-Evolving CLI Tool Status\n";
+    std::cout << "AGI CLI Platform Status\n";
     std::cout << std::string(40, '=') << "\n";
     std::cout << "Version: " << config_->get_value("version", "unknown") << "\n";
     std::cout << "Config file: " << config_->get_value("config_file", "default") << "\n";
@@ -118,9 +118,9 @@ void CommandExecutor::show_history() {
 }
 
 void CommandExecutor::show_version() {
-    std::cout << "Self-Evolving CLI Tool v" << config_->get_value("version", "1.0.0") << "\n";
+    std::cout << "AGI CLI Platform v" << config_->get_value("version", "1.0.0") << "\n";
     std::cout << "Built with CLI11 and modern C++17\n";
-    std::cout << "A foundation for AGI platform development\n";
+    std::cout << "Self-evolving intelligence framework for AGI development\n";
 }
 
 bool CommandExecutor::validate_code(const std::string& code) {
