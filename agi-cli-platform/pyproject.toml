@@ -7,6 +7,8 @@ dependencies = [
     "stringzilla>=3.12.5",
     "pyyaml>=6.0",
     "click>=8.0.0",
+    "requests>=2.32.0",
+    "docker>=7.0.0",
 ]
 
 [build-system]

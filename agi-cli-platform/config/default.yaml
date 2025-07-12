@@ -5,10 +5,17 @@ verbose: false
 # LLM Integration Settings
 llm:
   use_direct_api: true
-  providers: ["gemini"]  # Priority order - Gemini only
+  providers: ["gemini", "openai", "anthropic", "local"]  # Priority order with fallback
   timeout: 30
   temperature: 0.7
   max_tokens: 2000
+  
+  # Provider-specific models
+  gemini_model: "gemini-2.0-flash"
+  openai_model: "gpt-3.5-turbo"
+  anthropic_model: "claude-3-sonnet-20240229"
+  local_model: "llama2"
+  local_endpoint: "http://localhost:11434/api/generate"
 
   # Gemini configuration
   gemini_model: "gemini-2.0-flash"
@@ -92,6 +99,23 @@ security:
     - "del /q" 
     - "chmod 777"
     - "sudo"
+
+# Docker Sandbox Configuration (Phase 2 Enhancement)
+sandbox:
+  memory_limit: "128m"
+  cpu_limit: "0.5"
+  timeout: 30
+  network_disabled: true
+  read_only_filesystem: true
+  temp_dir_size: "10m"
+  max_file_size: 1048576  # 1MB
+
+# Enhanced Validation Settings (Phase 2)
+validation:
+  max_complexity: 10
+  max_lines: 100
+  max_functions: 5
+  min_security_score: 70
 
 # Directory Paths
 paths:

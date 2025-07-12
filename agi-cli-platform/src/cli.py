@@ -16,6 +16,13 @@ from plugin_system import PluginSystem
 from history import HistoryManager
 from logger import setup_logger
 
+# Try to import enhanced components
+try:
+    from multi_provider_llm import MultiProviderLLM
+    MULTI_PROVIDER_AVAILABLE = True
+except ImportError:
+    MULTI_PROVIDER_AVAILABLE = False
+
 # Setup logging
 logger = setup_logger(__name__)
 
@@ -23,7 +30,15 @@ class CLIContext:
     """Context object to share state between commands"""
     def __init__(self):
         self.config_manager = ConfigManager()
-        self.llm_integration = LLMIntegration(self.config_manager)
+        
+        # Use multi-provider LLM if available, otherwise fall back to basic
+        if MULTI_PROVIDER_AVAILABLE:
+            self.llm_integration = MultiProviderLLM(self.config_manager)
+            logger.info("Using multi-provider LLM integration")
+        else:
+            self.llm_integration = LLMIntegration(self.config_manager)
+            logger.info("Using basic LLM integration")
+        
         self.code_generator = CodeGenerator(self.config_manager, self.llm_integration)
         self.command_manager = CommandManager(self.config_manager)
         self.plugin_system = PluginSystem(self.config_manager)
@@ -226,6 +241,38 @@ def llm_query(ctx, query: str):
     except Exception as e:
         logger.error(f"LLM query failed: {e}")
         click.echo(f"❌ LLM query failed: {e}", err=True)
+
+@cli.command()
+@click.pass_context
+def providers(ctx):
+    """Show LLM provider statistics (multi-provider only)"""
+    
+    cli_ctx = ctx.obj
+    
+    if not MULTI_PROVIDER_AVAILABLE or not hasattr(cli_ctx.llm_integration, 'get_provider_stats'):
+        click.echo("📊 Provider statistics not available (using basic LLM integration)")
+        return
+    
+    try:
+        stats = cli_ctx.llm_integration.get_provider_stats()
+        available = cli_ctx.llm_integration.get_available_providers()
+        
+        click.echo("📊 LLM Provider Statistics")
+        click.echo("=" * 40)
+        click.echo(f"Available providers: {', '.join(available)}")
+        click.echo()
+        
+        for provider_name, provider_stats in stats.items():
+            status = "🟢 Available" if provider_name in available else "🔴 Unavailable"
+            click.echo(f"{provider_name.upper()} ({provider_stats['model']}) - {status}")
+            click.echo(f"  Requests: {provider_stats['requests']}")
+            click.echo(f"  Errors: {provider_stats['errors']} ({provider_stats['error_rate']:.1%})")
+            click.echo(f"  Avg Response Time: {provider_stats['avg_response_time']:.2f}s")
+            click.echo()
+    
+    except Exception as e:
+        logger.error(f"Failed to get provider stats: {e}")
+        click.echo(f"❌ Failed to get provider stats: {e}", err=True)
 
 def main():
     """Main entry point"""

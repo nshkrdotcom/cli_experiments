@@ -1,5 +1,6 @@
 """
 Code validation and safety checks
+Enhanced with 5-layer validation system
 """
 
 import ast
@@ -20,19 +21,49 @@ from logger import setup_logger
 
 logger = setup_logger(__name__)
 
+# Try to import enhanced validation components
+try:
+    from enhanced_validator import EnhancedValidator, ValidationResult
+    from docker_sandbox import DockerSandbox
+    ENHANCED_VALIDATION_AVAILABLE = True
+    logger.info("Enhanced validation system available")
+except ImportError as e:
+    ENHANCED_VALIDATION_AVAILABLE = False
+    logger.warning(f"Enhanced validation not available: {e}")
+
 class CodeValidator:
     """Comprehensive code validation for security and correctness"""
 
-    def __init__(self, config_manager):
+    def __init__(self, config_manager, llm_integration=None):
         self.config_manager = config_manager
+        self.llm_integration = llm_integration
         self.security_config = config_manager.get('security', {})
         self.validation_rules = self._load_validation_rules()
+        
+        # Initialize enhanced validator if available
+        self.enhanced_validator = None
+        if ENHANCED_VALIDATION_AVAILABLE and llm_integration:
+            try:
+                self.enhanced_validator = EnhancedValidator(config_manager, llm_integration)
+                logger.info("Enhanced 5-layer validation system initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize enhanced validator: {e}")
 
-    def validate_code(self, code: str) -> Tuple[bool, List[str]]:
+    def validate_code(self, code: str, user_input: str = "") -> Tuple[bool, List[str]]:
         """
         Comprehensive code validation
         Returns (is_valid, list_of_issues)
         """
+        # Use enhanced validation if available
+        if self.enhanced_validator:
+            try:
+                result = self.enhanced_validator.validate_code_comprehensive(code, user_input)
+                logger.info(f"Enhanced validation complete: valid={result.is_valid}, score={result.security_score:.1f}")
+                return result.is_valid, result.issues + result.warnings
+            except Exception as e:
+                logger.error(f"Enhanced validation failed, falling back to basic: {e}")
+        
+        # Fallback to basic validation
         issues = []
 
         try:
@@ -147,7 +178,7 @@ class CodeValidator:
                             issues.append(f"AST: Dangerous function call: {func_name}")
 
                     elif isinstance(node.func, ast.Attribute):
-                        if hasattr(node.func.value, 'id'):
+                        if isinstance(node.func.value, ast.Name):
                             if (node.func.value.id == 'os' and 
                                 node.func.attr in ['system', 'popen', 'execl']):
                                 issues.append(f"AST: Dangerous os function: {node.func.attr}")
